@@ -36,13 +36,16 @@ appController.addApp = async (req, res) => {
          customer: customer._id,
       })
 
-      customer.apps.push(newApp)
-
-      await customer.save()
-
       await newApp.save()
 
-      res.status(200).send(newApp)
+      const NewApp = await App.findOne({ name }).select({
+         _id: 0,
+         __v: 0,
+      })
+      customer.apps.push(JSON.stringify(NewApp))
+      await customer.save()
+
+      res.status(200).send(NewApp)
    } catch (err) {
       console.log(err)
       res.status(500).json({ message: 'Internal server error' })
@@ -112,6 +115,6 @@ appRouter.post('/addApp', appController.addApp)
 
 appRouter.post('/getApps', appController.getApps)
 
-appRouter.put('/updateApp', appController.updateApp)
+appRouter.post('/updateApp', appController.updateApp)
 
 module.exports = appRouter
