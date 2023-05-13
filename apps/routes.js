@@ -37,15 +37,10 @@ appController.addApp = async (req, res) => {
       })
 
       await newApp.save()
-
-      const NewApp = await App.findOne({ name }).select({
-         _id: 0,
-         __v: 0,
-      })
-      customer.apps.push(JSON.stringify(NewApp))
+      customer.apps.push(newApp._id)
       await customer.save()
 
-      res.status(200).send(NewApp)
+      res.status(200).send(newApp)
    } catch (err) {
       console.log(err)
       res.status(500).json({ message: 'Internal server error' })
@@ -99,7 +94,67 @@ appController.updateApp = async (req, res) => {
 
       app.lastUpdated = Date.now()
 
-      await app.save()
+      await Promise.all([app.save()])
+
+      res.status(200).send(app)
+   } catch (err) {
+      console.log(err)
+      res.status(500).json({ message: 'Internal server error' })
+   }
+}
+
+appController.getApp = async (req, res) => {
+   try {
+      const { appId } = req.body
+
+      if (!appId) {
+         return res.status(400).send('All input is required')
+      }
+
+      const app = await App.findById(appId).select({
+         _id: 0,
+         __v: 0,
+      })
+
+      if (!app) {
+         return res.status(403).send('App does not exist')
+      }
+
+      res.status(200).send(app)
+   } catch (err) {
+      console.log(err)
+      res.status(500).json({ message: 'Internal server error' })
+   }
+}
+
+appController.deleteApp = async (req, res) => {
+   try {
+      const { name, customerName } = req.body
+
+      if (!name || !customerName) {
+         return res.status(400).send('All input is required')
+      }
+
+      const customer = await Customer.findOne({ name: customerName })
+      if (!customer) {
+         return res.status(409).send('Customer does not exist')
+      }
+
+      const oldApp = await App.findOne({ name, customer: customer._id })
+      if (!oldApp) {
+         return res.status(409).send('App doesnt exists')
+      }
+
+      const appIndex = customer.apps.indexOf(oldApp._id)
+      if (appIndex !== -1) {
+         customer.apps.splice(appIndex, 1)
+         await customer.save()
+      }
+      const app = await App.findByIdAndDelete(oldApp._id)
+
+      if (!app) {
+         return res.status(403).send('App does not exist')
+      }
 
       res.status(200).send()
    } catch (err) {
@@ -111,10 +166,14 @@ appController.updateApp = async (req, res) => {
 const appRouter = express.Router()
 
 // Add a new customer
-appRouter.post('/addApp', appController.addApp)
+appRouter.post('/add', appController.addApp)
 
-appRouter.post('/getApps', appController.getApps)
+appRouter.post('/getAll', appController.getApps)
 
-appRouter.post('/updateApp', appController.updateApp)
+appRouter.post('/update', appController.updateApp)
+
+appRouter.post('/get', appController.getApp)
+
+appRouter.post('/delete', appController.deleteApp)
 
 module.exports = appRouter

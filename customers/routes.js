@@ -53,11 +53,32 @@ customerController.getCustomers = async (req, res) => {
    }
 }
 
+customerController.deleteCustomer = async (req, res) => {
+   try {
+      const { name } = req.body
+      if (!name) {
+         return res.status(400).send('All input is required')
+      }
+
+      const customer = await Customer.findOneAndDelete({ name })
+      if (!customer) {
+         return res.status(403).send('App does not exist')
+      }
+
+      res.status(200).send()
+   } catch (err) {
+      console.log(err)
+      res.status(500).json({ message: 'Internal server error' })
+   }
+}
+
 const customerRouter = express.Router()
 
 // Add a new customer
-customerRouter.post('/addCustomer', customerController.addCustomer)
+customerRouter.post('/add', customerController.addCustomer)
 
-customerRouter.get('/getCustomers', customerController.getCustomers)
+customerRouter.post('/delete', customerController.deleteCustomer)
+
+customerRouter.get('/getAll', customerController.getCustomers)
 
 module.exports = customerRouter
