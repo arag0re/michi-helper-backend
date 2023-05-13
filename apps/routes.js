@@ -14,8 +14,8 @@ appController.addApp = async (req, res) => {
       const { name, customerName } = req.body
 
       // Validate user input
-      if (!name && !customerName) {
-         res.status(400).send('All input is required')
+      if (!name || !customerName) {
+         return res.status(400).send('All input is required')
       }
 
       const customer = await Customer.findOne({ name: customerName })
@@ -36,13 +36,13 @@ appController.addApp = async (req, res) => {
          customer: customer._id,
       })
 
-      customer.apps.push(newApp._id)
+      customer.apps.push(newApp)
 
       await customer.save()
 
       await newApp.save()
 
-      res.status(200).send()
+      res.status(200).send(newApp)
    } catch (err) {
       console.log(err)
       res.status(500).json({ message: 'Internal server error' })
@@ -54,7 +54,7 @@ appController.getApps = async (req, res) => {
       const { customerName } = req.body
 
       if (!customerName) {
-         res.status(403).send('All input is required')
+         return res.status(403).send('All input is required')
       }
 
       const customer = await Customer.findOne({ name: customerName })
@@ -74,11 +74,44 @@ appController.getApps = async (req, res) => {
    }
 }
 
+appController.updateApp = async (req, res) => {
+   try {
+      // Get user input
+      const { name, customerName } = req.body
+
+      // Validate user input
+      if (!name || !customerName) {
+         return res.status(400).send('All input is required')
+      }
+
+      const customer = await Customer.findOne({ name: customerName })
+      if (!customer) {
+         return res.status(409).send('Customer does not exist')
+      }
+
+      const app = await App.findOne({ name, customer: customer._id })
+      if (!app) {
+         return res.status(409).send('App doesnt exists')
+      }
+
+      app.lastUpdated = Date.now()
+
+      await app.save()
+
+      res.status(200).send()
+   } catch (err) {
+      console.log(err)
+      res.status(500).json({ message: 'Internal server error' })
+   }
+}
+
 const appRouter = express.Router()
 
 // Add a new customer
 appRouter.post('/addApp', appController.addApp)
 
-appRouter.get('/getApps', appController.getApps)
+appRouter.post('/getApps', appController.getApps)
+
+appRouter.put('/updateApp', appController.updateApp)
 
 module.exports = appRouter

@@ -38,7 +38,11 @@ customerController.addCustomer = async (req, res) => {
 
 customerController.getCustomers = async (req, res) => {
    try {
-      const customers = await Customer.find()
+      const customers = await Customer.find().select({
+         _id: 0,
+         __v: 0,
+         createdAt: 0,
+      })
       if (!customers) {
          return res.status(409).send('No Customers found')
       }
