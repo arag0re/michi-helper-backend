@@ -15,13 +15,13 @@ customerController.addCustomer = async (req, res) => {
 
       // Validate user input
       if (!name) {
-         res.status(400).send('All input is required')
+         res.status(400).send()
       }
 
       // Check if customer already exists
       const oldCustomer = await Customer.findOne({ name })
       if (oldCustomer) {
-         return res.status(409).send('User already exists. Please login.')
+         return res.status(409).send()
       }
 
       // Create new customer
@@ -31,7 +31,17 @@ customerController.addCustomer = async (req, res) => {
       })
       await newCustomer.save()
 
-      res.status(200).send()
+      const customer = await Customer.findOne({ name }).select({
+         _id: 0,
+         __v: 0,
+         apps: 0,
+         createdAt: 0,
+      })
+      if (!customer) {
+         return res.status(409).send()
+      }
+
+      res.status(200).send(customer)
    } catch (err) {
       console.log(err)
       res.status(500).json({ message: 'Internal server error' })

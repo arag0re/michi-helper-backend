@@ -24,8 +24,9 @@ appController.addApp = async (req, res) => {
       }
 
       const oldApp = await App.findOne({ name, customer: customer._id })
+      console.log(oldApp)
       if (oldApp) {
-         return res.status(409).send('App already exists')
+         return res.status(409).send()
       }
 
       // Create new app
@@ -36,9 +37,10 @@ appController.addApp = async (req, res) => {
          customer: customer._id,
       })
 
-      await newApp.save()
+      // add appId to customer apps-array
       customer.apps.push(newApp._id)
-      await customer.save()
+
+      await Promise.all([newApp.save(), customer.save()])
 
       res.status(200).send(newApp)
    } catch (err) {
@@ -94,7 +96,7 @@ appController.updateApp = async (req, res) => {
 
       app.lastUpdated = Date.now()
 
-      await Promise.all([app.save()])
+      await app.save()
 
       res.status(200).send(app)
    } catch (err) {
