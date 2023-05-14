@@ -5,7 +5,7 @@ const CustomerSchema = require('../models/customer')
 const App = mongoose.model('App', AppSchema)
 const Customer = mongoose.model('Customer', CustomerSchema)
 
-// Create controller for creation, updating of customers
+// Create controller for creation, updating and deletion of customers
 const customerController = {}
 
 customerController.addCustomer = async (req, res) => {
@@ -67,9 +67,9 @@ customerController.deleteCustomer = async (req, res) => {
          return res.status(403).send('Customer does not exist')
       }
 
-      customer.apps.forEach(async (app) => {
-         const _app = await App.findByIdAndDelete(app)
-         if (!_app) {
+      customer.apps.forEach(async (appId) => {
+         const app = await App.findByIdAndDelete(appId)
+         if (!app) {
             return res.status(403).send('App does not exist')
          }
       })
