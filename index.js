@@ -11,8 +11,8 @@ backend.use(cors())
 // Use json parser middleware
 backend.use(express.json())
 // Use router middleware
-backend.use('/customer', customerRouter)
-backend.use('/app', appRouter)
+backend.use('/api/customer', customerRouter)
+backend.use('/api/app', appRouter)
 
 connectToDatabase().then(() => {
    // Create WebSocket server
